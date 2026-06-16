@@ -62,6 +62,32 @@ export interface CollectionInfo {
 }
 
 // ---------------------------------------------------------------------------
+// Record type
+// ---------------------------------------------------------------------------
+
+/**
+ * A record stored in a Boltstore collection.
+ *
+ * Every record includes system-managed `id`, `created_at`, and `updated_at`
+ * fields. User-defined fields are accessed via the generic parameter or
+ * dynamic keys.
+ *
+ * @example
+ * ```ts
+ * type User = BoltstoreRecord<{ name: string; age: number }>;
+ * const user: User = { id: "rec_...", name: "Alice", age: 30, created_at: "...", updated_at: "..." };
+ * ```
+ */
+export interface BoltstoreRecord<Fields = Record<string, unknown>> {
+  /** Unique record identifier. */
+  id: string;
+  /** ISO-8601 timestamp of when the record was created. */
+  created_at: string;
+  /** ISO-8601 timestamp of the last update. */
+  updated_at: string;
+}
+
+// ---------------------------------------------------------------------------
 // API envelope
 // ---------------------------------------------------------------------------
 
@@ -84,6 +110,151 @@ export interface ApiResponse<T = unknown> {
     message: string;
     details?: unknown;
   };
+}
+
+// ---------------------------------------------------------------------------
+// Database info
+// ---------------------------------------------------------------------------
+
+/** Information about a registered application database. */
+export interface DatabaseInfo {
+  /** Application (database) name. */
+  name: string;
+  /** Path to the SQLite file. */
+  path: string;
+  /** ISO-8601 timestamp of when the database was created. */
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Filter DSL
+// ---------------------------------------------------------------------------
+
+/** Filter operators supported by the Boltstore query engine. */
+export type FilterOperator =
+  | "eq"
+  | "neq"
+  | "gt"
+  | "gte"
+  | "lt"
+  | "lte"
+  | "in"
+  | "nin"
+  | "contains"
+  | "startsWith"
+  | "endsWith"
+  | "exists"
+  | "regexp";
+
+/** A single filter condition. */
+export interface FilterCondition {
+  [field: string]: unknown | { [op in FilterOperator]?: unknown };
+}
+
+/** A logical grouping of filter conditions. */
+export interface FilterGroup {
+  and?: Filter[];
+  or?: Filter[];
+  not?: Filter;
+}
+
+/** A filter is either a single condition or a group. */
+export type Filter = FilterCondition | FilterGroup;
+
+// ---------------------------------------------------------------------------
+// Sort
+// ---------------------------------------------------------------------------
+
+/** Sort specification for a single field. */
+export interface SortSpec {
+  /** Field name. */
+  field: string;
+  /** Sort direction. */
+  direction: "asc" | "desc";
+}
+
+// ---------------------------------------------------------------------------
+// Pagination
+// ---------------------------------------------------------------------------
+
+/** Offset-based pagination metadata returned by the server. */
+export interface PaginationMeta {
+  /** Current page number (1-based). */
+  page: number;
+  /** Items per page. */
+  perPage: number;
+  /** Total number of items matching the query. */
+  total: number;
+  /** Total number of pages. */
+  totalPages: number;
+}
+
+/** Options for listing records with pagination, filtering, and sorting. */
+export interface ListOptions {
+  /** Filter criteria. */
+  filter?: Record<string, unknown>;
+  /** Sort field. */
+  sort?: string;
+  /** Sort direction. */
+  direction?: "asc" | "desc";
+  /** Maximum number of records to return. */
+  limit?: number;
+  /** Number of records to skip (for offset pagination). */
+  offset?: number;
+  /** Specific fields to return (reduces payload size). */
+  fields?: string[];
+  /** Related collections to expand (foreign key joins). */
+  expand?: string[];
+}
+
+/** Options for advanced queries using the query DSL. */
+export interface QueryOptions {
+  /** Target collection. */
+  collection: string;
+  /** Filter criteria (filter DSL). */
+  filter?: Filter;
+  /** Sort specifications. */
+  sort?: SortSpec[];
+  /** Specific fields to return. */
+  fields?: string[];
+  /** Maximum number of records to return. */
+  limit?: number;
+  /** Number of records to skip. */
+  offset?: number;
+  /** Full-text search term. */
+  search?: string;
+  /** Aggregate specification. */
+  aggregate?: {
+    [field: string]: "count" | "sum" | "avg" | "min" | "max" | { alias: string; field: string };
+  };
+  /** Field to group by. */
+  groupBy?: string;
+  /** Post-aggregation filter. */
+  having?: Filter;
+}
+
+// ---------------------------------------------------------------------------
+// Batch operations
+// ---------------------------------------------------------------------------
+
+/** A single batch operation. */
+export interface BatchOperation {
+  /** Operation type. */
+  action: "create" | "update" | "delete";
+  /** Record ID (required for update/delete). */
+  id?: string;
+  /** Record data (required for create, optional for update). */
+  data?: Record<string, unknown>;
+}
+
+/** Result of a batch operation. */
+export interface BatchResult {
+  /** Number of records created. */
+  created: number;
+  /** Number of records updated. */
+  updated: number;
+  /** Number of records deleted. */
+  deleted: number;
 }
 
 // ---------------------------------------------------------------------------

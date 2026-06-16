@@ -2,9 +2,12 @@
   "name": "@boltstore/utils",
   "version": "1.0.0",
   "private": false,
+  "type": "module",
   "description": "Shared types, schemas, and utilities for Boltstore",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "files": ["dist"],
   "scripts": {
     "build": "tsc",
