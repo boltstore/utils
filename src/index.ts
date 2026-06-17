@@ -132,19 +132,19 @@ export interface DatabaseInfo {
 
 /** Filter operators supported by the Boltstore query engine. */
 export type FilterOperator =
-  | "eq"
-  | "neq"
-  | "gt"
-  | "gte"
-  | "lt"
-  | "lte"
-  | "in"
-  | "nin"
-  | "contains"
-  | "startsWith"
-  | "endsWith"
-  | "exists"
-  | "regexp";
+  | "$eq"
+  | "$neq"
+  | "$gt"
+  | "$gte"
+  | "$lt"
+  | "$lte"
+  | "$in"
+  | "$nin"
+  | "$contains"
+  | "$startsWith"
+  | "$endsWith"
+  | "$exists"
+  | "$regexp";
 
 /** A single filter condition. */
 export interface FilterCondition {
@@ -153,9 +153,9 @@ export interface FilterCondition {
 
 /** A logical grouping of filter conditions. */
 export interface FilterGroup {
-  and?: Filter[];
-  or?: Filter[];
-  not?: Filter;
+  $and?: Filter[];
+  $or?: Filter[];
+  $not?: Filter;
 }
 
 /** A filter is either a single condition or a group. */
@@ -182,11 +182,11 @@ export interface PaginationMeta {
   /** Current page number (1-based). */
   page: number;
   /** Items per page. */
-  perPage: number;
+  per_page: number;
   /** Total number of items matching the query. */
   total: number;
   /** Total number of pages. */
-  totalPages: number;
+  total_pages: number;
 }
 
 /** Options for listing records with pagination, filtering, and sorting. */
@@ -201,10 +201,24 @@ export interface ListOptions {
   limit?: number;
   /** Number of records to skip (for offset pagination). */
   offset?: number;
+  /** Page number (1-based). When set with perPage, overrides limit/offset. */
+  page?: number;
+  /** Items per page. */
+  perPage?: number;
   /** Specific fields to return (reduces payload size). */
   fields?: string[];
   /** Related collections to expand (foreign key joins). */
   expand?: string[];
+}
+
+/** Aggregate function names. */
+export type AggregateFn = "$count" | "$sum" | "$avg" | "$min" | "$max";
+
+/** Aggregate specification. */
+export interface AggregateSpec {
+  function: AggregateFn;
+  field?: string;
+  alias?: string;
 }
 
 /** Options for advanced queries using the query DSL. */
@@ -224,9 +238,7 @@ export interface QueryOptions {
   /** Full-text search term. */
   search?: string;
   /** Aggregate specification. */
-  aggregate?: {
-    [field: string]: "count" | "sum" | "avg" | "min" | "max" | { alias: string; field: string };
-  };
+  aggregate?: AggregateSpec;
   /** Field to group by. */
   groupBy?: string;
   /** Post-aggregation filter. */
@@ -265,23 +277,34 @@ export interface BatchResult {
 export const VALID_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
 /**
+ * Generate a cryptographically secure identifier with a prefix.
+ * Exported here so shared code and clients can use the same scheme.
+ */
+export function generateSecureId(prefix: string): string {
+  const random = new Uint8Array(16);
+  crypto.getRandomValues(random);
+  const randomB64 = btoa(String.fromCharCode(...random)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return `${prefix}_${Date.now().toString(36)}_${randomB64}`;
+}
+
+/**
  * Validate that a table or column name is a safe SQL identifier.
  * Throws if the name is invalid.
  */
 export function validateIdentifier(name: string, label: string): void {
-  if (!VALID_IDENTIFIER.test(name)) {
-    throw new Error(
-      `Invalid ${label} "${name}". Must start with a letter or underscore and contain only letters, numbers, and underscores.`
-    );
+    if (!VALID_IDENTIFIER.test(name)) {
+      throw new Error(
+        `Invalid ${label} "${name}". Must start with a letter or underscore and contain only letters, numbers, and underscores.`
+      );
+    }
+    // Prevent overly long identifiers
+    if (name.length > 128) {
+      throw new Error(`${label} "${name}" exceeds 128 characters.`);
+    }
   }
-  // Prevent overly long identifiers
-  if (name.length > 128) {
-    throw new Error(`${label} "${name}" exceeds 128 characters.`);
-  }
-}
 
-/** Reserved table names that users cannot create/delete. */
-export const RESERVED_TABLE_NAMES = new Set([
+  /** Reserved table names that users cannot create/delete. */
+  export const RESERVED_TABLE_NAMES = new Set([
   "_collections",
   "_migrations",
   "_users",
@@ -299,4 +322,59 @@ export const RESERVED_TABLE_NAMES = new Set([
  */
 export function isReservedTable(name: string): boolean {
   return RESERVED_TABLE_NAMES.has(name) || name.startsWith("sqlite_");
+}
+
+// ---------------------------------------------------------------------------
+// Path safety helpers
+// ---------------------------------------------------------------------------
+
+/** Regex for a simple, safe filesystem path component. */
+export const SAFE_PATH_COMPONENT = /^[a-zA-Z0-9._-]+$/;
+
+/**
+ * Sanitize an untrusted string so it can be used as a single path component.
+ * Any character outside `[a-zA-Z0-9._-]` is replaced with an underscore.
+ */
+export function sanitizePathComponent(input: string): string {
+  return input.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^\.+/, "");
+}
+
+/** Simple POSIX-style path normalizer with `..`/`./` handling. */
+function normalizePath(p: string): string {
+  let path = p.replace(/\\/g, "/").replace(/\/+/g, "/");
+  const absolute = path.startsWith("/");
+  const parts = path.split("/").filter(Boolean);
+  const stack: string[] = [];
+  for (const part of parts) {
+    if (part === "..") {
+      if (!absolute && (stack.length === 0 || stack[stack.length - 1] === "..")) {
+        stack.push("..");
+      } else if (stack.length > 0 && stack[stack.length - 1] !== "..") {
+        stack.pop();
+      }
+    } else if (part !== "." && part !== "") {
+      stack.push(part);
+    }
+  }
+  let normalized = stack.join("/");
+  if (absolute) normalized = "/" + normalized;
+  return normalized || ".";
+}
+
+/**
+ * Resolve a path relative to a base directory and ensure it stays within that base.
+ * Throws if the resolved path attempts to break out of `baseDir`.
+ *
+ * This is a synchronous check; callers are responsible for checking that the
+ * path actually exists if required.
+ */
+export function resolveSafePath(baseDir: string, relative: string): string {
+  const normalizedBase = normalizePath(baseDir).replace(/\/$/, "");
+  const resolved = relative.startsWith("/")
+    ? normalizePath(relative)
+    : normalizePath(`${normalizedBase}/${relative}`);
+  if (resolved !== normalizedBase && !resolved.startsWith(`${normalizedBase}/`)) {
+    throw new Error(`Path traversal detected: "${relative}" resolves outside base directory.`);
+  }
+  return resolved;
 }
