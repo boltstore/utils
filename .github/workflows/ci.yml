@@ -1,16 +1,14 @@
-name: Release
+name: CI
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  publish:
+  test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -18,4 +16,4 @@ jobs:
           bun-version: latest
       - run: bun install
       - run: bun run build
-      - run: npm publish --provenance --access public
+      - run: bun test
