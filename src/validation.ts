@@ -19,7 +19,7 @@ export function generateSecureId(prefix: string): string {
   const random = new Uint8Array(16);
   crypto.getRandomValues(random);
   const randomB64 = btoa(String.fromCharCode(...random)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  return `${prefix}_${Date.now().toString(36)}_${randomB64}`;
+  return `${prefix}_${randomB64}_${Date.now().toString(36)}`;
 }
 
 export function validateIdentifier(name: string, label: string): void {
