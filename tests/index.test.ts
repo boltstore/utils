@@ -25,7 +25,7 @@ describe("validateIdentifier", () => {
 
   test("rejects identifiers with invalid characters", () => {
     expect(() => validateIdentifier("my table", "table")).toThrow();
-    expect(() => validateIdentifier("col-name", "column")).toThrow();
+    expect(() => validateIdentifier("col.name", "column")).toThrow();
   });
 
   test("rejects overly long identifiers", () => {

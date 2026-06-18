@@ -1,4 +1,4 @@
-export const VALID_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+export const VALID_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_-]*$/;
 
 /** ID prefixes for system tables — used for easy debugging and consistency. */
 export const ID_PREFIXES = {
