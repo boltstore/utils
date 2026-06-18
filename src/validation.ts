@@ -1,5 +1,20 @@
 export const VALID_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
+/** ID prefixes for system tables — used for easy debugging and consistency. */
+export const ID_PREFIXES = {
+  user: "usr",
+  token: "tok",
+  apiKey: "key",
+  apiKeySecret: "blt",
+  database: "dbs",
+  backup: "bkp",
+  auditLog: "log",
+  collection: "col",
+  migration: "mig",
+  record: "rec",
+  requestId: "req",
+} as const;
+
 export function generateSecureId(prefix: string): string {
   const random = new Uint8Array(16);
   crypto.getRandomValues(random);
