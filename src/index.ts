@@ -11,4 +11,6 @@ export * from "./types/record";
 export * from "./types/api";
 export * from "./types/query";
 export * from "./validation";
+export * from "./types/ws";
+export * from "./types/ws-client";
 export * from "./path";
