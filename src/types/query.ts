@@ -37,8 +37,10 @@ export interface PaginationMeta {
   total_pages: number;
 }
 
+export type FilterValue = string | number | boolean | null | (string | number | boolean)[];
+
 export interface ListOptions {
-  filter?: Record<string, unknown>;
+  filter?: Record<string, FilterValue>;
   sort?: string;
   direction?: "asc" | "desc";
   limit?: number;
