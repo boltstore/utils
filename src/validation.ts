@@ -16,10 +16,10 @@ export const ID_PREFIXES = {
 } as const;
 
 export function generateSecureId(prefix: string): string {
-  const random = new Uint8Array(16);
+  const random = new Uint8Array(22);
   crypto.getRandomValues(random);
   const randomB64 = btoa(String.fromCharCode(...random)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  return `${prefix}_${randomB64}_${Date.now().toString(36)}`;
+  return `${prefix}_${randomB64}`;
 }
 
 export function validateIdentifier(name: string, label: string): void {
