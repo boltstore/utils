@@ -26,6 +26,8 @@ export interface SubscribeMessage {
   collection?: string;
   recordId?: string;
   filter?: Record<string, unknown>;
+  /** Client-generated local ID for deterministic response matching. */
+  localId?: string;
 }
 
 export interface UnsubscribeMessage {
