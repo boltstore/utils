@@ -26,6 +26,7 @@ export interface CollectionSchema {
 export interface CollectionInfo {
   name: string;
   schema: ColumnDefinition[];
+  relations?: Record<string, { field: string; foreignCollection: string; cascadeDelete?: boolean }>;
   recordCount: number;
   createdAt: string;
   updatedAt: string;
