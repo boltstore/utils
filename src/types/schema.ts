@@ -23,10 +23,13 @@ export interface CollectionSchema {
   system?: boolean;
 }
 
+export type ConflictStrategy = "last-write-wins" | "server-wins" | "client-merge";
+
 export interface CollectionInfo {
   name: string;
   columns: ColumnDefinition[];
   relations?: Record<string, { field: string; foreignCollection: string; cascadeDelete?: boolean }>;
+  conflictStrategy?: ConflictStrategy;
   recordCount: number;
   createdAt: string;
   updatedAt: string;

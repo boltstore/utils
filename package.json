@@ -1,6 +1,6 @@
 {
   "name": "@boltstore/utils",
-  "version": "0.7.1",
+  "version": "0.7.5",
   "private": false,
   "type": "module",
   "description": "Shared types, schemas, and utilities for Boltstore",
