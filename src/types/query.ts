@@ -49,6 +49,8 @@ export interface ListOptions {
   perPage?: number;
   fields?: string[];
   expand?: string[];
+  search?: string;
+  searchFields?: string[];
 }
 
 export type AggregateFn = "$count" | "$sum" | "$avg" | "$min" | "$max";
