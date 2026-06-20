@@ -23,7 +23,7 @@ export interface CollectionSchema {
   system?: boolean;
 }
 
-export type ConflictStrategy = "last-write-wins" | "server-wins" | "client-merge";
+export type ConflictStrategy = "last-write-wins";
 
 export interface CollectionInfo {
   name: string;
