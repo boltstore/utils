@@ -67,6 +67,7 @@ export interface QueryOptions {
   limit?: number;
   offset?: number;
   search?: string;
+  searchFields?: string[];
   aggregate?: AggregateSpec;
   groupBy?: string;
   having?: Filter;
