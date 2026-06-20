@@ -28,6 +28,8 @@ export interface SubscribeMessage {
   filter?: Record<string, unknown>;
   /** Client-generated local ID for deterministic response matching. */
   localId?: string;
+  /** Last known change seq (rowid from _changes). Server replays events after this seq. */
+  lastSeq?: number;
 }
 
 export interface UnsubscribeMessage {
@@ -42,4 +44,6 @@ export interface RecordEvent {
   database: string;
   record: Record<string, unknown>;
   previous?: Record<string, unknown>;
+  /** SQLite rowid from the _changes table, used for replay sequencing. */
+  seq?: number;
 }
