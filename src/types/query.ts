@@ -113,6 +113,16 @@ export interface WithRelation {
   offset?: number;
   multiple?: boolean;
   with?: Record<string, boolean | WithRelation>;
+  through?: string;
+}
+
+export interface SqlExpr {
+  expr: string;
+  bindings?: unknown[];
+}
+
+export function sql(expr: string, bindings?: unknown[]): SqlExpr {
+  return { expr, bindings };
 }
 
 export interface QueryOptions {
@@ -132,6 +142,8 @@ export interface QueryOptions {
   having?: Filter;
   windows?: WindowSpec[];
   joins?: JoinSpec[];
+  selectExprs?: SqlExpr[];
+  orderByExprs?: SqlExpr[];
   with?: Record<string, boolean | WithRelation>;
 }
 

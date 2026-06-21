@@ -156,6 +156,8 @@ export interface UnionClause {
 export interface BuilderState {
   collection?: string;
   fromSubquery?: FromSubquery;
+  selectExprs?: import("../types/query").SqlExpr[];
+  orderByExprs?: import("../types/query").SqlExpr[];
   wheres: WhereClause[];
   orders: OrderClause[];
   limit?: number;
@@ -184,5 +186,7 @@ export function createDefaultState(): BuilderState {
     windows: undefined,
     fromSubquery: undefined,
     with: undefined,
+    selectExprs: undefined,
+    orderByExprs: undefined,
   };
 }

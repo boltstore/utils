@@ -30,10 +30,20 @@ export interface CollectionSchema {
 
 export type ConflictStrategy = "last-write-wins";
 
+export interface CollectionRelation {
+  field: string;
+  foreignCollection: string;
+  cascadeDelete?: boolean;
+  type?: "hasOne" | "hasMany" | "belongsTo" | "manyToMany";
+  through?: string;
+  localKey?: string;
+  foreignKey?: string;
+}
+
 export interface CollectionInfo {
   name: string;
   columns: ColumnDefinition[];
-  relations?: Record<string, { field: string; foreignCollection: string; cascadeDelete?: boolean }>;
+  relations?: Record<string, CollectionRelation>;
   conflictStrategy?: ConflictStrategy;
   recordCount: number;
   createdAt: string;

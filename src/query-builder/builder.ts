@@ -24,6 +24,8 @@ export class QueryBuilder {
   protected cloneState(s: BuilderState): BuilderState {
     return {
       collection: s.collection,
+      selectExprs: s.selectExprs ? s.selectExprs.map((e) => ({ ...e })) : undefined,
+      orderByExprs: s.orderByExprs ? s.orderByExprs.map((e) => ({ ...e })) : undefined,
       fromSubquery: s.fromSubquery ? { ...s.fromSubquery, query: { ...s.fromSubquery.query } } : undefined,
       wheres: s.wheres.map((w) => ({ ...w })),
       orders: s.orders.map((o) => ({ ...o })),
@@ -259,6 +261,16 @@ export class QueryBuilder {
 
   orderByRaw(sql: string): this {
     this.state.orders.push({ field: sql, direction: "asc" });
+    return this;
+  }
+
+  selectExpr(...exprs: import("../types/query").SqlExpr[]): this {
+    this.state.selectExprs = exprs;
+    return this;
+  }
+
+  orderByExpr(expr: import("../types/query").SqlExpr): this {
+    this.state.orderByExprs = [expr];
     return this;
   }
 
@@ -551,6 +563,8 @@ export class QueryBuilder {
       };
     }
     if (this.state.windows) opts.windows = this.state.windows;
+    if (this.state.selectExprs) opts.selectExprs = this.state.selectExprs;
+    if (this.state.orderByExprs) opts.orderByExprs = this.state.orderByExprs;
     if (this.state.joins.length > 0) {
       opts.joins = this.state.joins.map((j) => ({
         type: j.type,
