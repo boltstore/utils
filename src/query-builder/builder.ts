@@ -39,6 +39,7 @@ export class QueryBuilder {
       withs: s.withs.map((w) => ({ ...w })),
       unions: s.unions.map((u) => ({ ...u })),
       windows: s.windows ? s.windows.map((w) => ({ ...w })) : undefined,
+      with: s.with,
     };
   }
 
@@ -330,20 +331,36 @@ export class QueryBuilder {
     return this;
   }
 
-  with(alias: string, query: (q: QueryBuilder) => void, columns?: string[]): this {
-    const child = new QueryBuilder();
-    query(child);
-    this.state.withs.push({
-      alias,
-      columns,
-      query: {
-        collection: child.state.collection,
-        wheres: child.state.wheres,
-        orders: child.state.orders,
-        limit: child.state.limit,
-        offset: child.state.offset,
-      },
-    });
+  with(aliasOrRelations: string | Record<string, boolean | import("../types/query").WithRelation>, query?: (q: QueryBuilder) => void, columns?: string[]): this {
+    if (typeof aliasOrRelations === "string") {
+      // CTE: with(alias, query, columns?)
+      const child = new QueryBuilder();
+      query!(child);
+      this.state.withs.push({
+        alias: aliasOrRelations,
+        columns,
+        query: {
+          collection: child.state.collection,
+          wheres: child.state.wheres,
+          orders: child.state.orders,
+          limit: child.state.limit,
+          offset: child.state.offset,
+        },
+      });
+    } else {
+      // Nested relations: with({ author: true, posts: { fields: ["title"] } })
+      const normalized: Record<string, import("../types/query").WithRelation> = {};
+      for (const [key, val] of Object.entries(aliasOrRelations)) {
+        if (val === true) {
+          normalized[key] = {};
+        } else if (val === false) {
+          continue;
+        } else {
+          normalized[key] = val;
+        }
+      }
+      this.state.with = normalized;
+    }
     return this;
   }
 
@@ -452,6 +469,18 @@ export class QueryBuilder {
       if (havingFilter) opts.having = havingFilter;
     }
     if (this.state.windows) opts.windows = this.state.windows;
+    if (this.state.joins.length > 0) {
+      opts.joins = this.state.joins.map((j) => ({
+        type: j.type,
+        target: j.target,
+        on: j.on?.map((o) => ({
+          left: o.left,
+          operator: o.operator ?? "=",
+          right: o.right,
+        })),
+      }));
+    }
+    if (this.state.with) opts.with = this.state.with;
 
     return opts;
   }

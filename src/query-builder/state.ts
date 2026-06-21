@@ -68,6 +68,17 @@ export interface WhereClauseRaw {
   boolean: WhereBoolean;
 }
 
+export interface WhereClauseSubquery {
+  type: "subquery";
+  field: string;
+  operator: "inSubquery" | "notInSubquery" | "subqueryEq" | "subqueryNeq" | "subqueryGt" | "subqueryGte" | "subqueryLt" | "subqueryLte";
+  subqueryCollection: string;
+  subqueryField?: string;
+  subqueryAggregate?: { function: string; field?: string };
+  subqueryFilter?: WhereClause[];
+  boolean: WhereBoolean;
+}
+
 export type WhereClause =
   | WhereClauseBasic
   | WhereClauseIn
@@ -77,7 +88,8 @@ export type WhereClause =
   | WhereClauseNested
   | WhereClauseNot
   | WhereClauseExists
-  | WhereClauseRaw;
+  | WhereClauseRaw
+  | WhereClauseSubquery;
 
 export interface OrderClause {
   field: string;
@@ -134,6 +146,7 @@ export interface BuilderState {
   withs: WithClause[];
   unions: UnionClause[];
   windows?: import("../types/query").WindowSpec[];
+  with?: Record<string, import("../types/query").WithRelation>;
 }
 
 export function createDefaultState(): BuilderState {

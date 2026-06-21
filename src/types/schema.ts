@@ -14,7 +14,12 @@ export interface ColumnDefinition {
   type: ColumnType;
   required?: boolean;
   default?: string | number | boolean | null;
+  defaultExpr?: string;
   unique?: boolean;
+  generated?: {
+    expression: string;
+    stored?: boolean;
+  };
 }
 
 export interface CollectionSchema {

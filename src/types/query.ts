@@ -16,7 +16,15 @@ export type FilterOperator =
   | "$glob"
   | "$between"
   | "$notBetween"
-  | "$not";
+  | "$not"
+  | "$inSubquery"
+  | "$notInSubquery"
+  | "$subqueryEq"
+  | "$subqueryNeq"
+  | "$subqueryGt"
+  | "$subqueryGte"
+  | "$subqueryLt"
+  | "$subqueryLte";
 
 export interface FilterCondition {
   [field: string]: unknown | { [op in FilterOperator]?: unknown };
@@ -60,6 +68,31 @@ export interface WindowSpec {
   alias?: string;
 }
 
+export interface JoinOnCondition {
+  left: string;
+  operator?: "=" | "!=" | ">" | ">=" | "<" | "<=";
+  right: string;
+}
+
+export interface JoinSpec {
+  type: "inner" | "left" | "cross";
+  target: string;
+  on?: JoinOnCondition[];
+}
+
+export interface WithRelation {
+  collection?: string;
+  localKey?: string;
+  foreignKey?: string;
+  filter?: Filter;
+  fields?: string[];
+  sort?: SortSpec[];
+  limit?: number;
+  offset?: number;
+  multiple?: boolean;
+  with?: Record<string, boolean | WithRelation>;
+}
+
 export interface QueryOptions {
   collection: string;
   filter?: Filter;
@@ -75,6 +108,8 @@ export interface QueryOptions {
   groupBy?: string | string[];
   having?: Filter;
   windows?: WindowSpec[];
+  joins?: JoinSpec[];
+  with?: Record<string, boolean | WithRelation>;
 }
 
 export interface BatchOperation {
