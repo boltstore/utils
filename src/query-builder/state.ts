@@ -56,6 +56,8 @@ export interface WhereClauseExists {
   field: string;
   operator: "exists" | "notExists";
   query?: WhereClause[];
+  subqueryCollection?: string;
+  subqueryFilter?: WhereClause[];
   boolean: WhereBoolean;
 }
 

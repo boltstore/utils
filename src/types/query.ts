@@ -15,7 +15,8 @@ export type FilterOperator =
   | "$like"
   | "$glob"
   | "$between"
-  | "$notBetween";
+  | "$notBetween"
+  | "$not";
 
 export interface FilterCondition {
   [field: string]: unknown | { [op in FilterOperator]?: unknown };

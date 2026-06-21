@@ -64,6 +64,11 @@ function compileClause(clause: WhereClause): Filter {
     }
 
     case "exists": {
+      if (clause.subqueryCollection) {
+        const inner = clause.subqueryFilter ? compileFilter(clause.subqueryFilter) : undefined;
+        const key = clause.operator === "exists" ? "$subqueryExists" : "$subqueryNotExists";
+        return { [key]: { collection: clause.subqueryCollection, filter: inner } } as unknown as Filter;
+      }
       validateIdentifier(clause.field, "where field");
       return { [clause.field]: { $exists: clause.operator === "exists" } } as FilterCondition;
     }
