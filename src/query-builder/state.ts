@@ -96,9 +96,33 @@ export interface OrderClause {
   direction: "asc" | "desc";
 }
 
+export interface FromSubquery {
+  alias: string;
+  collection?: string;
+  query: {
+    collection?: string;
+    wheres: WhereClause[];
+    orders: OrderClause[];
+    limit?: number;
+    offset?: number;
+  };
+}
+
+export interface JoinSubquery {
+  collection?: string;
+  query: {
+    collection?: string;
+    wheres: WhereClause[];
+    orders: OrderClause[];
+    limit?: number;
+    offset?: number;
+  };
+}
+
 export interface JoinClause {
   type: "inner" | "left" | "cross";
   target: string;
+  subquery?: JoinSubquery;
   on?: Array<{
     left: string;
     operator: "=" | "!=" | ">" | ">=" | "<" | "<=";
@@ -131,6 +155,7 @@ export interface UnionClause {
 
 export interface BuilderState {
   collection?: string;
+  fromSubquery?: FromSubquery;
   wheres: WhereClause[];
   orders: OrderClause[];
   limit?: number;
@@ -157,5 +182,7 @@ export function createDefaultState(): BuilderState {
     withs: [],
     unions: [],
     windows: undefined,
+    fromSubquery: undefined,
+    with: undefined,
   };
 }

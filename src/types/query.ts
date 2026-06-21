@@ -74,9 +74,31 @@ export interface JoinOnCondition {
   right: string;
 }
 
+export interface FromSubqueryWire {
+  alias: string;
+  collection?: string;
+  query: {
+    collection?: string;
+    wheres?: import("../query-builder/state").WhereClause[];
+    orders?: import("../query-builder/state").OrderClause[];
+    limit?: number;
+    offset?: number;
+  };
+}
+
 export interface JoinSpec {
   type: "inner" | "left" | "cross";
   target: string;
+  subquery?: {
+    collection?: string;
+    query: {
+      collection?: string;
+      wheres?: import("../query-builder/state").WhereClause[];
+      orders?: import("../query-builder/state").OrderClause[];
+      limit?: number;
+      offset?: number;
+    };
+  };
   on?: JoinOnCondition[];
 }
 
@@ -95,6 +117,7 @@ export interface WithRelation {
 
 export interface QueryOptions {
   collection: string;
+  fromSubquery?: FromSubqueryWire;
   filter?: Filter;
   sort?: SortSpec[];
   fields?: string[];

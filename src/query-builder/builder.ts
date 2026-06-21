@@ -24,6 +24,7 @@ export class QueryBuilder {
   protected cloneState(s: BuilderState): BuilderState {
     return {
       collection: s.collection,
+      fromSubquery: s.fromSubquery ? { ...s.fromSubquery, query: { ...s.fromSubquery.query } } : undefined,
       wheres: s.wheres.map((w) => ({ ...w })),
       orders: s.orders.map((o) => ({ ...o })),
       limit: s.limit,
@@ -35,7 +36,7 @@ export class QueryBuilder {
       aggregate: s.aggregate ? s.aggregate.map((a) => ({ ...a })) : undefined,
       groupBy: s.groupBy ? [...s.groupBy] : undefined,
       having: s.having ? s.having.map((w) => ({ ...w })) : undefined,
-      joins: s.joins.map((j) => ({ ...j, on: j.on ? j.on.map((o) => ({ ...o })) : undefined })),
+      joins: s.joins.map((j) => ({ ...j, subquery: j.subquery ? { ...j.subquery, query: { ...j.subquery.query } } : undefined, on: j.on ? j.on.map((o) => ({ ...o })) : undefined })),
       withs: s.withs.map((w) => ({ ...w })),
       unions: s.unions.map((u) => ({ ...u })),
       windows: s.windows ? s.windows.map((w) => ({ ...w })) : undefined,
@@ -47,9 +48,31 @@ export class QueryBuilder {
     return new QueryBuilder(this.cloneState(this.state));
   }
 
-  from(collection: string): this {
-    validateIdentifier(collection, "collection name");
-    this.state.collection = collection;
+  from(collection: string): this;
+  from(subquery: (q: QueryBuilder) => void, alias: string): this;
+  from(collectionOrSubquery: string | ((q: QueryBuilder) => void), alias?: string): this {
+    if (typeof collectionOrSubquery === "string") {
+      validateIdentifier(collectionOrSubquery, "collection name");
+      this.state.collection = collectionOrSubquery;
+      this.state.fromSubquery = undefined;
+    } else {
+      const child = new QueryBuilder();
+      collectionOrSubquery(child);
+      if (!alias) throw new Error("Alias is required for subquery in FROM.");
+      validateIdentifier(alias, "subquery alias");
+      this.state.collection = undefined;
+      this.state.fromSubquery = {
+        alias,
+        collection: child.state.collection,
+        query: {
+          collection: child.state.collection,
+          wheres: child.state.wheres,
+          orders: child.state.orders,
+          limit: child.state.limit,
+          offset: child.state.offset,
+        },
+      };
+    }
     return this;
   }
 
@@ -305,23 +328,75 @@ export class QueryBuilder {
     return this;
   }
 
-  join(target: string, on?: Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>): this {
-    validateIdentifier(target, "join target");
-    this.state.joins.push({
-      type: "inner",
-      target,
-      on: on?.map((o) => ({ left: o.left, operator: o.operator ?? "=", right: o.right })),
-    });
+  join(target: string, on?: Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>): this;
+  join(subquery: (q: QueryBuilder) => void, alias: string, on?: Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>): this;
+  join(targetOrSubquery: string | ((q: QueryBuilder) => void), aliasOrOn?: string | Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>, on?: Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>): this {
+    if (typeof targetOrSubquery === "string") {
+      validateIdentifier(targetOrSubquery, "join target");
+      const onArr = (aliasOrOn as Array<{ left: string; operator?: string; right: string }> | undefined);
+      this.state.joins.push({
+        type: "inner",
+        target: targetOrSubquery,
+        on: onArr?.map((o) => ({ left: o.left, operator: (o.operator || "=") as "=" | "!=" | ">" | ">=" | "<" | "<=", right: o.right })),
+      });
+    } else {
+      const child = new QueryBuilder();
+      targetOrSubquery(child);
+      const alias = aliasOrOn as string;
+      if (!alias) throw new Error("Alias is required for subquery in JOIN.");
+      validateIdentifier(alias, "join alias");
+      this.state.joins.push({
+        type: "inner",
+        target: alias,
+        subquery: {
+          collection: child.state.collection,
+          query: {
+            collection: child.state.collection,
+            wheres: child.state.wheres,
+            orders: child.state.orders,
+            limit: child.state.limit,
+            offset: child.state.offset,
+          },
+        },
+        on: on?.map((o) => ({ left: o.left, operator: o.operator ?? "=", right: o.right })),
+      });
+    }
     return this;
   }
 
-  leftJoin(target: string, on?: Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>): this {
-    validateIdentifier(target, "join target");
-    this.state.joins.push({
-      type: "left",
-      target,
-      on: on?.map((o) => ({ left: o.left, operator: o.operator ?? "=", right: o.right })),
-    });
+  leftJoin(target: string, on?: Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>): this;
+  leftJoin(subquery: (q: QueryBuilder) => void, alias: string, on?: Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>): this;
+  leftJoin(targetOrSubquery: string | ((q: QueryBuilder) => void), aliasOrOn?: string | Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>, on?: Array<{ left: string; operator?: "=" | "!=" | ">" | ">=" | "<" | "<="; right: string }>): this {
+    if (typeof targetOrSubquery === "string") {
+      validateIdentifier(targetOrSubquery, "join target");
+      const onArr = (aliasOrOn as Array<{ left: string; operator?: string; right: string }> | undefined);
+      this.state.joins.push({
+        type: "left",
+        target: targetOrSubquery,
+        on: onArr?.map((o) => ({ left: o.left, operator: (o.operator || "=") as "=" | "!=" | ">" | ">=" | "<" | "<=", right: o.right })),
+      });
+    } else {
+      const child = new QueryBuilder();
+      targetOrSubquery(child);
+      const alias = aliasOrOn as string;
+      if (!alias) throw new Error("Alias is required for subquery in JOIN.");
+      validateIdentifier(alias, "join alias");
+      this.state.joins.push({
+        type: "left",
+        target: alias,
+        subquery: {
+          collection: child.state.collection,
+          query: {
+            collection: child.state.collection,
+            wheres: child.state.wheres,
+            orders: child.state.orders,
+            limit: child.state.limit,
+            offset: child.state.offset,
+          },
+        },
+        on: on?.map((o) => ({ left: o.left, operator: o.operator ?? "=", right: o.right })),
+      });
+    }
     return this;
   }
 
@@ -468,11 +543,22 @@ export class QueryBuilder {
       const havingFilter = compileFilter(this.state.having);
       if (havingFilter) opts.having = havingFilter;
     }
+    if (this.state.fromSubquery) {
+      opts.fromSubquery = {
+        alias: this.state.fromSubquery.alias,
+        collection: this.state.fromSubquery.collection,
+        query: this.state.fromSubquery.query,
+      };
+    }
     if (this.state.windows) opts.windows = this.state.windows;
     if (this.state.joins.length > 0) {
       opts.joins = this.state.joins.map((j) => ({
         type: j.type,
         target: j.target,
+        subquery: j.subquery ? {
+          collection: j.subquery.collection,
+          query: j.subquery.query,
+        } : undefined,
         on: j.on?.map((o) => ({
           left: o.left,
           operator: o.operator ?? "=",
