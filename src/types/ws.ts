@@ -3,9 +3,13 @@ export type WsMessageType =
   | "pong"
   | "error"
   | "connected"
+  | "authenticated"
   | "subscribe"
   | "unsubscribe"
-  | "event";
+  | "event"
+  | "auth"
+  | "subscribed"
+  | "unsubscribed";
 
 export interface WsMessage {
   type: WsMessageType;
