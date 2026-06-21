@@ -16,7 +16,7 @@ type WhereValue = unknown;
 type BasicOperator = "eq" | "neq" | "gt" | "gte" | "lt" | "lte" | "contains" | "startsWith" | "endsWith" | "regexp";
 
 export class QueryBuilder {
-  protected state: BuilderState;
+  state: BuilderState;
 
   constructor(state?: BuilderState) {
     this.state = state ? this.cloneState(state) : createDefaultState();
