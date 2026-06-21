@@ -3,7 +3,6 @@ import { validateIdentifier } from "../validation";
 import type {
   BuilderState,
   WhereClause,
-  WhereBoolean,
   OrderClause,
   JoinClause,
   WithClause,
@@ -408,8 +407,16 @@ export class QueryBuilder {
 
   toParams(): QueryOptions {
     const filter = compileFilter(this.state.wheres);
-    const sort = this.state.orders.length > 0
-      ? this.state.orders.map((o) => ({
+    const validOrders = this.state.orders.filter((o) => {
+      try {
+        validateIdentifier(o.field, "order field");
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    const sort = validOrders.length > 0
+      ? validOrders.map((o) => ({
           field: o.field,
           direction: o.direction,
         }))

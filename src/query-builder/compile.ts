@@ -20,7 +20,6 @@ const OP_MAP: Record<string, string> = {
   like: "$like",
   glob: "$glob",
   exists: "$exists",
-  notExists: "$notExists",
 };
 
 /**

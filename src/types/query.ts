@@ -41,22 +41,6 @@ export interface PaginationMeta {
   total_pages: number;
 }
 
-export type FilterValue = string | number | boolean | null | (string | number | boolean)[];
-
-export interface ListOptions {
-  filter?: Record<string, FilterValue>;
-  sort?: string;
-  direction?: "asc" | "desc";
-  limit?: number;
-  offset?: number;
-  page?: number;
-  perPage?: number;
-  fields?: string[];
-  expand?: string[];
-  search?: string;
-  searchFields?: string[];
-}
-
 export type AggregateFn = "$count" | "$sum" | "$avg" | "$min" | "$max";
 
 export interface AggregateSpec {
