@@ -38,6 +38,7 @@ export class QueryBuilder {
       joins: s.joins.map((j) => ({ ...j, on: j.on ? j.on.map((o) => ({ ...o })) : undefined })),
       withs: s.withs.map((w) => ({ ...w })),
       unions: s.unions.map((u) => ({ ...u })),
+      windows: s.windows ? s.windows.map((w) => ({ ...w })) : undefined,
     };
   }
 
@@ -283,6 +284,11 @@ export class QueryBuilder {
     return this;
   }
 
+  window(spec: import("../types/query").WindowSpec | import("../types/query").WindowSpec[]): this {
+    this.state.windows = Array.isArray(spec) ? spec : [spec];
+    return this;
+  }
+
   having(field: string | ((q: QueryBuilder) => void), operator?: WhereValue, value?: WhereValue): this {
     if (typeof field === "function") {
       const child = new QueryBuilder();
@@ -445,6 +451,7 @@ export class QueryBuilder {
       const havingFilter = compileFilter(this.state.having);
       if (havingFilter) opts.having = havingFilter;
     }
+    if (this.state.windows) opts.windows = this.state.windows;
 
     return opts;
   }

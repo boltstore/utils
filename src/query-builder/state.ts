@@ -133,6 +133,7 @@ export interface BuilderState {
   joins: JoinClause[];
   withs: WithClause[];
   unions: UnionClause[];
+  windows?: import("../types/query").WindowSpec[];
 }
 
 export function createDefaultState(): BuilderState {
@@ -142,5 +143,6 @@ export function createDefaultState(): BuilderState {
     joins: [],
     withs: [],
     unions: [],
+    windows: undefined,
   };
 }

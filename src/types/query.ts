@@ -50,6 +50,16 @@ export interface AggregateSpec {
   alias?: string;
 }
 
+export type WindowFn = "ROW_NUMBER" | "RANK" | "DENSE_RANK" | "NTILE" | "LEAD" | "LAG" | "FIRST_VALUE" | "LAST_VALUE" | "NTH_VALUE" | "COUNT" | "SUM" | "AVG" | "MIN" | "MAX";
+
+export interface WindowSpec {
+  function: WindowFn;
+  field?: string;
+  partitionBy?: string[];
+  orderBy?: SortSpec[];
+  alias?: string;
+}
+
 export interface QueryOptions {
   collection: string;
   filter?: Filter;
@@ -64,6 +74,7 @@ export interface QueryOptions {
   multiAggregate?: AggregateSpec[];
   groupBy?: string | string[];
   having?: Filter;
+  windows?: WindowSpec[];
 }
 
 export interface BatchOperation {
