@@ -1,46 +1,30 @@
-# @boltstore/utils
+# @boltstore/utils — DEPRECATED
 
-Shared types, schemas, and utilities for the Boltstore ecosystem.
+**Deprecated as of Boltstore v0.8.0. Use `@boltstore/client` instead.**
 
-## What's inside
+The shared types previously exported by `@boltstore/utils` have moved into
+`@boltstore/client`. If you need access to shared types, install the client
+package instead:
 
-- **TypeScript types:** `Record`, `Pagination`, `Filter`, `Query`, auth types, realtime types, sync types, storage types
-- **Filter parser:** Parse, compile, and convert Boltstore filter strings to SQL
-- **Validation:** Collection name, field name, and filter validation utilities
-- **Constants:** HTTP routes, WebSocket events, filter operators, and more
-- **JSON Schema:** Cross-language type definitions for generating PHP, Go, and other SDKs
-
-## Installation
-
-```bash
-npm install @boltstore/utils
+```
+npm install @boltstore/client
 ```
 
-## Usage
+## Migration
 
-```typescript
-import { parseFilter, compileFilter } from "@boltstore/utils";
-import type { Filter } from "@boltstore/utils";
+| Old import | New import |
+|------------|------------|
+| `@boltstore/utils` | `@boltstore/client` |
+| `QueryBuilder` | Removed — use simple query helpers in `@boltstore/client` |
+| WS types | Removed — realtime is not part of core Boltstore |
 
-const filter = parseFilter("age:gte:18 AND status:eq:active");
-console.log(compileFilter(filter));
-// "(age:gte:18 AND status:eq:"active")"
-```
+## Why?
 
-## Development
+Boltstore has been simplified from a BaaS platform to a database platform.
+The `@boltstore/utils` package was a shared dependency between server, client,
+and other packages. With the new architecture, the client SDK is the only
+consumer of shared types, so types live there directly.
 
-```bash
-bun install
-bun run build    # compile TypeScript
-bun test         # run tests
-```
+## Support
 
-## Publishing
-
-```bash
-npm publish
-```
-
-## License
-
-MIT
+This package will receive no further updates. Use `@boltstore/client` instead.

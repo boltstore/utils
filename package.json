@@ -3,7 +3,7 @@
   "version": "0.7.6",
   "private": false,
   "type": "module",
-  "description": "Shared types, schemas, and utilities for Boltstore",
+  "description": "[DEPRECATED] Use @boltstore/client instead",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
