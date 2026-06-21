@@ -11,7 +11,11 @@ export type FilterOperator =
   | "$startsWith"
   | "$endsWith"
   | "$exists"
-  | "$regexp";
+  | "$regexp"
+  | "$like"
+  | "$glob"
+  | "$between"
+  | "$notBetween";
 
 export interface FilterCondition {
   [field: string]: unknown | { [op in FilterOperator]?: unknown };
@@ -66,12 +70,14 @@ export interface QueryOptions {
   filter?: Filter;
   sort?: SortSpec[];
   fields?: string[];
+  expand?: string[];
   limit?: number;
   offset?: number;
   search?: string;
   searchFields?: string[];
   aggregate?: AggregateSpec;
-  groupBy?: string;
+  multiAggregate?: AggregateSpec[];
+  groupBy?: string | string[];
   having?: Filter;
 }
 

@@ -14,3 +14,4 @@ export * from "./validation";
 export * from "./types/ws";
 export * from "./types/ws-client";
 export * from "./path";
+export * from "./query-builder";
